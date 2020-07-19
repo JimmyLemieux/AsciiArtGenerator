@@ -3,6 +3,9 @@ import math
 from PIL import Image
 import argparse
 import sys
+import cv2
+
+import os
 
 GRAY_SCALE_MAP = {
     1 : "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ",
@@ -62,6 +65,66 @@ def imageToAscii(fileName, cols, scale, style):
 
     return imageRows
 
+def main_program(args):
+    if not args.image:
+        print "Please enter an iamge to convert!"
+        exit(0)
+
+    if args.style not in range(1,4):
+        print  "Not an available style option"
+        exit(0)
+
+    imageRows = imageToAscii(args.image, args.cols, args.scale, GRAY_SCALE_MAP[args.style])
+
+    f = open(args.out, "w")
+
+    for r in imageRows:
+        f.write(r + '\n')
+    f.close()
+
+
+def splitAndConvertFrames():
+    file_name = "test.mp4"
+    cap = cv2.VideoCapture(file_name)
+    i = 0
+    while (cap.isOpened()):
+        ret, frame = cap.read()
+        if ret == False:
+            break
+        cv2.imwrite('frame' + str(i) + '.jpg', frame)
+
+        # When the write is complete then convert that video frame into ascii
+
+        # Save the generated ascii frames into the asciiFrames directory
+
+        imageRows = imageToAscii(args.image, args.cols, args.scale, GRAY_SCALE_MAP[args.style])
+
+        f = open(args.out, "w")
+
+        for r in imageRows:
+            f.write(r + '\n')
+        f.close()
+
+        i += 1
+    cap.release()
+    cv2.destroyAllWindows()
+
+def concatImageFrames():
+    image_folder = "asciiFrames"
+    video_name = "out.mp4"
+
+    images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+    frame = cv2.imread(os.path.join(image_folder, images[0]))
+    height, width, layers = frame.shape
+
+    video = cv2.VideoWriter(video_name, 0, 1, (width, height))
+
+    for image in images:
+        video.write(cv2.imread(os.path.join(image_folder, image)))
+    
+    cap.release()
+    cv2.destroyAllWindows()
+
 
 
 # Setting up the args parser
@@ -71,24 +134,25 @@ parser.add_argument('--scale', default=0.63, type=float)
 parser.add_argument('--style', default=1, type=int)
 parser.add_argument('--image', type=str)
 parser.add_argument('--out', type=str, default="drawing.txt")
+parser.add_argument('--testing', type=int, default=1)
+
+
+
+
 
 
 
 # This is so you can retrieve the variables that were set in the command line
 args = parser.parse_args()
 
-if not args.image:
-    print "Please enter an iamge to convert!"
-    exit(0)
+if args.testing == 1:
+    testing_opencv()
+else:
+    main_program(args)
 
-if args.style not in range(1,4):
-    print  "Not an available style option"
-    exit(0)
 
-imageRows = imageToAscii(args.image, args.cols, args.scale, GRAY_SCALE_MAP[args.style])
 
-f = open(args.out, "w")
 
-for r in imageRows:
-    f.write(r + '\n')
-f.close()
+
+
+
