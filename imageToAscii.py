@@ -99,13 +99,15 @@ def splitAndConvertFrames():
 
         imageRows = imageToAscii(args.image, args.cols, args.scale, GRAY_SCALE_MAP[args.style])
 
-        f = open(args.out, "w")
+        file_name = 'frame' + str(i) + '.txt'
+        f = open(file_name, "w")
 
         for r in imageRows:
             f.write(r + '\n')
         f.close()
 
         i += 1
+        
     cap.release()
     cv2.destroyAllWindows()
 
@@ -113,7 +115,7 @@ def concatImageFrames():
     image_folder = "asciiFrames"
     video_name = "out.mp4"
 
-    images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+    images = [img for img in os.listdir(image_folder) if img.endswith(".txt")]
     frame = cv2.imread(os.path.join(image_folder, images[0]))
     height, width, layers = frame.shape
 
