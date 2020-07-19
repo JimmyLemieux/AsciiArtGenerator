@@ -85,27 +85,32 @@ def main_program(args):
 
 def splitAndConvertFrames():
     file_name = "test.mp4"
+    file_folder = "asciiFrames"
     cap = cv2.VideoCapture(file_name)
     i = 0
     while (cap.isOpened()):
         ret, frame = cap.read()
+        file_name = 'frame' + str(i) + '.jpg'
+
         if ret == False:
             break
-        cv2.imwrite('frame' + str(i) + '.jpg', frame)
+
+        #Creates a new file_name
+        cv2.imwrite(file_name, frame)
 
         # When the write is complete then convert that video frame into ascii
 
         # Save the generated ascii frames into the asciiFrames directory
 
-        imageRows = imageToAscii(args.image, args.cols, args.scale, GRAY_SCALE_MAP[args.style])
+        imageRows = imageToAscii(file_name, 120, 0.63, GRAY_SCALE_MAP[3])
 
-        file_name = 'frame' + str(i) + '.txt'
-        f = open(file_name, "w")
+        asciiFileName = 'frame' + str(i) + '.txt'
+
+        f = open(os.path.join(file_folder,asciiFileName), "w")
 
         for r in imageRows:
             f.write(r + '\n')
         f.close()
-
         i += 1
         
     cap.release()
@@ -148,7 +153,8 @@ parser.add_argument('--testing', type=int, default=1)
 args = parser.parse_args()
 
 if args.testing == 1:
-    testing_opencv()
+    splitAndConvertFrames()
+    concatImageFrames()
 else:
     main_program(args)
 
