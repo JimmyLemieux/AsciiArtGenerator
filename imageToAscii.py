@@ -1,6 +1,13 @@
 import numpy as np
 import math
+
+import PIL
 from PIL import Image
+import PIL.Image
+import PIL.ImageFont
+import PIL.ImageOps
+import PIL.ImageDraw
+
 import argparse
 import sys
 import cv2
@@ -121,13 +128,64 @@ def concatImageFrames():
     video_name = "out.mp4"
 
     images = [img for img in os.listdir(image_folder) if img.endswith(".txt")]
+    
     frame = cv2.imread(os.path.join(image_folder, images[0]))
+
+    j = 0
+    for image in images:
+
+        grayscale = 'L'
+
+        if image == 'frame30.txt':
+            image = 'frame29.txt'
+        text_file = open(image, "r")
+        lines =  tuple(l.rstrip() for l in text_file.readlines())
+
+
+
+        large_font = 20
+        font_path = 'cour.ttf'
+
+        try:
+            font = PIL.ImageFont.truetype(font_path, size=large_font)
+        except IOError:
+            font = PIL.ImageFont.load_default()
+            print "Font not available"
+
+        pt2px = lambda pt: int(round(pt * 96.0 / 72))  # convert points to pixels
+        max_width_line = max(lines, key=lambda s: font.getsize(s)[0])
+        # max height is adjusted down because it's too large visually for spacing
+        test_string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        max_height = pt2px(font.getsize(test_string)[1])
+        max_width = pt2px(font.getsize(max_width_line)[0])
+        height = max_height * len(lines)  # perfect or a little oversized
+        width = int(round(max_width + 40))  # a little oversized
+        image = PIL.Image.new(grayscale, (width, height), color=PIXEL_OFF)
+        draw = PIL.ImageDraw.Draw(image)
+
+        vertical_position = 5
+        horizontal_position = 5
+        line_spacing = int(round(max_height * 0.8))  # reduced spacing seems better
+        for line in lines:
+            draw.text((horizontal_position, vertical_position),
+                    line, fill=PIXEL_ON, font=font)
+            vertical_position += line_spacing
+        # crop the text
+        c_box = PIL.ImageOps.invert(image).getbbox()
+        image = image.crop(c_box)
+
+        cv2.imwrite(os.path.join(image_folder, 'img' + str(i) + '.png'))
+
+        j += 1
+
+        #video.write(cv2.imread(os.path.join(image_folder, image)))
+
+
+
     height, width, layers = frame.shape
 
     video = cv2.VideoWriter(video_name, 0, 1, (width, height))
 
-    for image in images:
-        video.write(cv2.imread(os.path.join(image_folder, image)))
     
     cap.release()
     cv2.destroyAllWindows()
@@ -153,7 +211,7 @@ parser.add_argument('--testing', type=int, default=1)
 args = parser.parse_args()
 
 if args.testing == 1:
-    splitAndConvertFrames()
+    #splitAndConvertFrames()
     concatImageFrames()
 else:
     main_program(args)
